@@ -8,7 +8,7 @@
             <el-divider content-position="left">Grund information</el-divider>
 
             <el-form-item label="Produkt ID">
-              <el-input v-model="product.id" placeholder="Produkt ID" clearable />
+              <el-input v-model="product.pid" placeholder="Produkt ID" clearable />
             </el-form-item>
 
             <el-form-item label="Produkt Namn">
@@ -61,7 +61,7 @@
 
       <el-form :inline="true" :model="search" class="demo-form-inline" size="mini">
         <el-form-item label="Produktnummer(ID)">
-          <el-input v-model="search.id" placeholder="Exakt sökning" clearable />
+          <el-input v-model="search.pid" placeholder="Exakt sökning" clearable />
         </el-form-item>
 
         <el-form-item label="Produktnamn">
@@ -78,8 +78,8 @@
       </el-form>
 
       <el-main>
-        <el-table :data="tableData" style="width: 100%">
-          <el-table-column fixed prop="id" label="Produkt ID" />
+        <el-table :data="foodList" style="width: 100%">
+          <el-table-column fixed prop="pid" label="Produkt ID" />
           <el-table-column prop="name" label="Produkt Namn" />
           <el-table-column prop="type" label="Produkttyper" />
           <el-table-column prop="count" label="Antal produkt" />
@@ -104,7 +104,7 @@ import { StarFilled } from '@element-plus/icons-vue'
 
 // Sökning
 const search = reactive({
-  id: '',
+  pid: '',
   name: ''
 })
 
@@ -116,45 +116,8 @@ const handleClick = () => {
   console.log('click')
 }
 
-// Tabel
-const tableData = [
-  {
-    id: '2016-05-03',
-    name: 'Tom',
-    type: 'California',
-    count: 'Los Angeles',
-    date: 'No. 189, Grove St, Los Angeles',
-    description: 'CA 90036',
-    tag: 'Home',
-  },
-  {
-    id: '2016-05-03',
-    name: 'Tom',
-    type: 'California',
-    count: 'Los Angeles',
-    date: 'No. 189, Grove St, Los Angeles',
-    description: 'CA 90036',
-    tag: 'Office',
-  },
-  {
-    id: '2016-05-03',
-    name: 'Tom',
-    type: 'California',
-    count: 'Los Angeles',
-    date: 'No. 189, Grove St, Los Angeles',
-    description: 'CA 90036',
-    tag: 'Home',
-  },
-  {
-    id: '2016-05-03',
-    name: 'Tom',
-    type: 'California',
-    count: 'Los Angeles',
-    date: 'No. 189, Grove St, Los Angeles',
-    description: 'CA 90036',
-    tag: 'Office',
-  },
-]
+// Tabel data
+const foodList = []
 
 // Tillläggnings form
 const dialogVisible = ref(false)
@@ -170,7 +133,7 @@ const handleClose = (done) => {
 }
 
 const product = reactive({
-  id: '',
+  pid: '',
   name: '',
   type: '',
   count: 0,
