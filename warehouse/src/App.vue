@@ -57,17 +57,21 @@
           <EditPen />
         </el-icon> Matlagerhantering</el-header>
 
-      <el-form :inline="true" :model="search" class="demo-form-inline">
-        <el-form-item label="Produktnummer(ID)" prop="pid">
+      <el-form ref="ruleForm" :inline="true" :model="search" class="demo-form-inline">
+        <el-form-item label="Produktnummer(ID)" prop="['search', 'pid']" :rules="[
+          { min: 0, max: 4, message: '长度不在有效范围内', trigger: 'blur' },
+        ]">
           <el-input v-model="search.pid" placeholder="Exakt sökning" clearable />
         </el-form-item>
 
-        <el-form-item label="Produktnamn" prop="name">
+        <el-form-item label="Produktnamn" prop="['search', 'name']" :rules="[
+          { min: 0, max: 4, message: '长度不在有效范围内', trigger: 'blur' },
+        ]">
           <el-input v-model="search.name" placeholder="Luddig sökning" clearable />
         </el-form-item>
 
         <el-form-item>
-          <el-button type="primary" @click="onSubmit">Söka</el-button>
+          <el-button type="primary" @click="onSubmit('search')">Söka</el-button>
         </el-form-item>
 
         <el-form-item>
@@ -104,11 +108,13 @@
 
 <script setup>
 import { reactive, ref } from 'vue';
-import { ElMessage } from 'element-plus';
-import { ElMessageBox } from 'element-plus';
-//import { StarFilled } from '@element-plus/icons-vue';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import axios from 'axios';
 import { onMounted } from 'vue';
+import { nextTick } from 'vue';
+
+const ruleForm = ref({});
+
 
 const search = reactive({
   pid: '',
@@ -146,7 +152,7 @@ const rules = reactive({
 });
 
 const dialogTitle = ref('');
-/* const id = ref(''); */
+// const { ruleForm } = toRefs(props);
 
 onMounted(async () => {
   pageInation();
@@ -193,7 +199,7 @@ const addInfo = () => {
 const add = async (pageInation) => {
   try {
     delete product._id;
-    
+
     await axios.post('http://localhost:3001/add', product);
     // Rensa informationen i inmatningsrutan:
     product.pid = '';
@@ -221,7 +227,7 @@ const add = async (pageInation) => {
 
 const remove = async (id) => {
   console.log('Clicked Remove button with id:', id);
-  
+
   if (id) {
     console.log('Product ID to be removed:', id);
     await axios.delete(`http://localhost:3001/delete/${id}`);
@@ -332,7 +338,7 @@ const confirmUpdate = async (id, pageInation) => {
     // Rensa egenskaperna i produktobjektet
     Object.keys(product).forEach(key => {
       product[key] = '';
-    }); 
+    });
     pageInation();  // Call pageInation with the provided function
   } catch (error) {
     console.error('Error updating product:', error);
@@ -361,15 +367,112 @@ const close = async () => {
   dialogVisible.value = false;
 };
 
+/* const onSubmit = () => {
+  if (ruleForm && ruleForm.value) {
 
-
-
-
-
+    ruleForm.value.validate((valid) => {
+      if (valid) {
+        // 验证通过的逻辑
+        if (search.pid !== '' && search.name === '') {
+          axios.get(`http://localhost:3001/findByPID/${search.pid}`).then((res) => {
+            console.log('根据产品编号搜索');
+            foodList.value = res.data;
+            search.pid = '';
+            page.total = 0;
+          });
+        } else if (search.pid === '' && search.name !== '') {
+          console.log('根据产品名称搜索');
+          axios
+            .get('http://localhost:3001/findByName', {
+              params: {
+                currentPage: page.current,
+                pageSize: page.size,
+                names: search.name,
+              },
+            })
+            .then((res) => {
+              console.log('根据产品名称搜索的结果');
+              console.log(res.data);
+              foodList.value = res.data.data;
+              page.total = res.data.total;
+            });
+        }
+      } else {
+        ElMessage({
+          message: '请提供有效的输入',
+          type: 'error'
+        });
+      }
+    });
+  } else {
+    ElMessage({
+      message: 'Can not find ruleForm',
+      type: 'error'
+    });
+  }
+}; */
 
 const onSubmit = () => {
-  console.log('submit!');
+  if (search.pid !== '' && search.name === '') {
+    ruleForm.value.validate((valid) => {
+      if (valid) {
+        axios.get(`http://localhost:3001/findByPID/${search.pid}`).then((res) => {
+          console.log('根据产品编号搜索');
+          foodList.value = res.data;
+          search.pid = '';
+          page.total = 0;
+        })
+      }
+      else {
+        ElMessage({
+          message: '请输入3位数字学号',
+          type: 'error'
+        });
+      }
+    })
+  }
+  else if (search.pid === '' && search.name !== '') {
+    ruleForm.value.validate((valid) => {
+      if (valid) {
+        console.log('根据产品名称搜索');
+        axios
+          .get(`http://localhost:3001/findByName/${search.name}`, {
+            params: {
+              currentPage: page.current,
+              pageSize: page.size,
+              names: search.name,
+            },
+          })
+          .then((res) => {
+            console.log('根据产品名称搜索的结果');
+            console.log(res.data);
+            foodList.value = res.data.data;
+            page.total = res.data.total;
+          });
+      }
+      else {
+        ElMessage({
+          message: '不要输入太奇葩的字符',
+          type: 'error'
+        });
+      }
+    })
+  }
+  else {
+    ElMessage({
+      message: '请输入有效字符',
+      type: 'error'
+    });
+  }
 };
+
+
+
+
+
+
+
+
 
 const pageInation = async () => {
   try {
@@ -390,7 +493,7 @@ const pageInation = async () => {
       await pageInation();
     }
   } catch (error) {
-    console.error('获取数据时发生错误：', error);
+    console.error('Ett fel uppstod när data hämtades:', error);
   }
 };
 
@@ -401,7 +504,7 @@ const currentChange = (currentPage) => {
 
   // Paginering för suddig namnfråga:
   if (search.name !== '') {
-    axios.get('findByName', {
+    axios.get(`http://localhost:3001/findByName/${search.name}`, {
       params: {
         currentPage: page.current,
         pageSize: page.size,
@@ -410,13 +513,14 @@ const currentChange = (currentPage) => {
     }).then(res => {
       console.log('Luddiga resultat för sökfrågor för namnsökning：');
       console.log(res.data);
-      foodList = res.data.data;
+      foodList.value = res.data.data;
       page.total = res.data.total;
     });
     return;
   }
   pageInation();
 };
+
 </script>
 
 <style scoped>
