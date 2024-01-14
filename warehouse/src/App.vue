@@ -16,7 +16,7 @@
             </el-form-item>
 
             <el-form-item label="Produkttyper">
-              <el-select v-model="product.type" placeholder="Produkttyper" clearable>
+              <el-select v-model="product.type" placeholder="Produkttyper" clearable :rules="rules.type">
                 <el-option label="Spannmålsprodukter" value="Spannmålsprodukter" />
                 <el-option label="Stärkelseprodukter" value="Stärkelseprodukter" />
                 <el-option label="Vegetabiliska produkter" value="Vegetabiliska produkter" />
@@ -58,16 +58,12 @@
         </el-icon> Matlagerhantering</el-header>
 
       <el-form ref="ruleForm" :inline="true" :model="search" class="demo-form-inline">
-        <el-form-item label="Produktnummer(ID)" prop="['search', 'pid']" :rules="[
-          { min: 0, max: 4, message: '长度不在有效范围内', trigger: 'blur' },
-        ]">
-          <el-input v-model="search.pid" placeholder="Exakt sökning" clearable />
+        <el-form-item label="Produktnummer(ID)" prop="['search', 'pid']">
+          <el-input v-model="search.pid" placeholder="Exakt sökning" clearable  :rules="rules.pid"/>
         </el-form-item>
 
-        <el-form-item label="Produktnamn" prop="['search', 'name']" :rules="[
-          { min: 0, max: 4, message: '长度不在有效范围内', trigger: 'blur' },
-        ]">
-          <el-input v-model="search.name" placeholder="Luddig sökning" clearable />
+        <el-form-item label="Produktnamn" prop="['search', 'name']">
+          <el-input v-model="search.name" placeholder="Luddig sökning" clearable  :rules="rules.name"/>
         </el-form-item>
 
         <el-form-item>
@@ -113,16 +109,14 @@ import axios from 'axios';
 import { onMounted } from 'vue';
 
 const ruleForm = ref({});
-
+const dialogTitle = ref('');
+const foodList = ref([]);
+const dialogVisible = ref(false);
 
 const search = reactive({
   pid: '',
   name: ''
 });
-
-const foodList = ref([]);
-
-const dialogVisible = ref(false);
 
 const product = reactive({
   _id: '',
@@ -142,22 +136,26 @@ const page = reactive({
 
 const rules = reactive({
   pid: [
-    { required: true, message: 'ProduktID får inte vara tomt', trigger: 'blur' }
+    { required: true, message: 'ProduktID får inte vara tomt', trigger: 'blur' },
+    { min: 4, max: 5, message: 'ProduktID-längden bör vara 4 till 5 tecken', trigger: 'blur' }
   ],
 
   name: [
-    { required: true, message: 'Produktnamnet får inte vara tomt', trigger: 'blur' }
+    { required: true, message: 'Produktnamnet får inte vara tomt', trigger: 'blur' },
+    { min: 1, max: 50, message: 'Produktnamnslängden bör vara 1 till 50 tecken', trigger: 'blur' }
+  ],
+  type: [
+    { required: true, message: 'Vänligen välj produkttyp', trigger: 'change' }
   ]
 });
 
-const dialogTitle = ref('');
 
 onMounted(async () => {
   pageInation();
 });
 
 const handleClose = (done) => {
-  ElMessageBox.confirm('Are you sure to close this dialog?')
+  ElMessageBox.confirm('Är du säker på att du vill stänga den här dialogrutan?')
     .then(() => {
       done();
     })
@@ -177,18 +175,28 @@ const addInfo = () => {
   dialogVisible.value = true;
 };
 
+const resetProduct = () => {
+  product.pid = '';
+  product.name = '';
+  product.type = '';
+  product.count = 0;
+  product.date = '';
+  product.description = '';
+};
+
+
 const add = async (pageInation) => {
   try {
+    if (!product.pid || !product.name || !product.type) {
+      ElMessage.error('Vänligen fyll i produkt-ID, produktnamn och produkttyp');
+      return;
+    }
+
     delete product._id;
 
     await axios.post('http://localhost:3001/add', product);
     // Rensa informationen i inmatningsrutan:
-    product.pid = '';
-    product.name = '';
-    product.type = '';
-    product.count = 0;
-    product.date = '';
-    product.description = '';
+    resetProduct();
 
     // Dölj inmatningsruta:
     dialogVisible.value = false;
@@ -206,21 +214,30 @@ const add = async (pageInation) => {
 };
 
 const remove = async (id) => {
-  console.log('Clicked Remove button with id:', id);
-
   if (id) {
-    console.log('Product ID to be removed:', id);
-    await axios.delete(`http://localhost:3001/delete/${id}`);
-    console.log('Deleted successfully');
-    ElMessage({
-      message: 'Radering är klar',
-      type: 'success'
+    // Visa bekräftelsedialog
+    ElMessageBox.confirm('Är du säker på att du vill radera denna produkt?', 'Varning', {
+      confirmButtonText: 'Ja',
+      cancelButtonText: 'Nej',
+      type: 'warning'
+    }).then(async () => {
+      console.log('Product ID to be removed:', id);
+      await axios.delete(`http://localhost:3001/delete/${id}`);
+      console.log('Deleted successfully');
+      ElMessage({
+        message: 'Radering är klar',
+        type: 'success'
+      });
+      pageInation();
+    }).catch(() => {
+      // Användaren klickar på avbryt-knappen
+      console.log('Radering avbruten');
     });
-    pageInation();
   } else {
     console.error('Invalid id');
   }
 };
+
 
 const edit = async (id) => {
   if (!id) {
@@ -278,13 +295,8 @@ const addAndUpdate = async () => {
 };
 
 const close = async () => {
-  if (dialogTitle == "Ändra produktinformation") {
-    product.pid = '';
-    product.name = '';
-    product.type = '';
-    product.count = 0;
-    product.date = '';
-    product.description = '';
+  if (dialogTitle === "Ändra produktinformation") {
+    resetProduct();
   }
   dialogVisible.value = false;
 };
@@ -329,7 +341,7 @@ const onSubmit = () => {
       }
       else {
         ElMessage({
-          message: '不要输入太奇葩的字符',
+          message: 'Ange inte för konstiga tecken',
           type: 'error'
         });
       }
@@ -337,7 +349,7 @@ const onSubmit = () => {
   }
   else {
     ElMessage({
-      message: '请输入有效字符',
+      message: 'Vänligen ange giltiga tecken',
       type: 'error'
     });
   }
@@ -423,6 +435,6 @@ body {
 }
 
 .el-date-picker {
-  width: 10px;
+  width: auto;
 }
 </style>
