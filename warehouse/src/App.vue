@@ -17,16 +17,16 @@
 
             <el-form-item label="Produkttyper">
               <el-select v-model="product.type" placeholder="Produkttyper" clearable>
-                <el-option label="Spannmålsprodukter" value="grainproducts" />
-                <el-option label="Stärkelseprodukter" value="starchproducts" />
-                <el-option label="Vegetabiliska produkter" value="vegetableproducts" />
-                <el-option label="Fruktprodukter" value="fruitproducts" />
-                <el-option label="Köttprodukter" value="meatproducts" />
-                <el-option label="Fjäderfäprodukter" value="poultryproducts" />
-                <el-option label="Äggprodukter" value="eggproducts" />
-                <el-option label="Mejeriprodukter" value="dairyproducts" />
-                <el-option label="Godis" value="candy" />
-                <el-option label="Snacks" value="snacks" />
+                <el-option label="Spannmålsprodukter" value="Spannmålsprodukter" />
+                <el-option label="Stärkelseprodukter" value="Stärkelseprodukter" />
+                <el-option label="Vegetabiliska produkter" value="Vegetabiliska produkter" />
+                <el-option label="Fruktprodukter" value="Fruktprodukter" />
+                <el-option label="Köttprodukter" value="Köttprodukter" />
+                <el-option label="Fjäderfäprodukter" value="Fjäderfäprodukter" />
+                <el-option label="Äggprodukter" value="Äggprodukter" />
+                <el-option label="Mejeriprodukter" value="Mejeriprodukter" />
+                <el-option label="Godis" value="Godis" />
+                <el-option label="Snacks" value="Snacks" />
               </el-select>
             </el-form-item>
 
@@ -81,8 +81,8 @@
 
       <el-main>
         <el-table :data="foodList" style="width: 100%">
-          <el-table-column fixed prop="_id" label="ID" />
-          <el-table-column prop="pid" label="Produkt ID" />
+          <!-- <el-table-column fixed prop="_id" label="ID" /> -->
+          <el-table-column fixed prop="pid" label="Produkt ID" />
           <el-table-column prop="name" label="Produkt Namn" />
           <el-table-column prop="type" label="Produkttyper" />
           <el-table-column prop="count" label="Antal produkt" />
@@ -111,7 +111,6 @@ import { reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import axios from 'axios';
 import { onMounted } from 'vue';
-import { nextTick } from 'vue';
 
 const ruleForm = ref({});
 
@@ -152,7 +151,6 @@ const rules = reactive({
 });
 
 const dialogTitle = ref('');
-// const { ruleForm } = toRefs(props);
 
 onMounted(async () => {
   pageInation();
@@ -167,23 +165,6 @@ const handleClose = (done) => {
       // catch error
     });
 };
-
-/* const checkCount = (rule, value, callback) => {
-  if (!value) {
-    return callback(new Error('Please input the count'));
-  }
-  setTimeout(() => {
-    if (!Number.isInteger(value)) {
-      callback(new Error('Please input digits'));
-    } else {
-      if (value < 18) {
-        callback(new Error('Count must be greater than 18'));
-      } else {
-        callback();
-      }
-    }
-  }, 1000);
-} */
 
 const fetch = () => {
   search.name = '';
@@ -224,7 +205,6 @@ const add = async (pageInation) => {
   }
 };
 
-
 const remove = async (id) => {
   console.log('Clicked Remove button with id:', id);
 
@@ -232,71 +212,15 @@ const remove = async (id) => {
     console.log('Product ID to be removed:', id);
     await axios.delete(`http://localhost:3001/delete/${id}`);
     console.log('Deleted successfully');
+    ElMessage({
+      message: 'Radering är klar',
+      type: 'success'
+    });
     pageInation();
   } else {
     console.error('Invalid id');
   }
 };
-
-/* const productId = ref(null);
-const remove = async (id) => {
-  try {
-    await axios.delete(`http://localhost:3001/delete/${id}`);
-
-    ElMessage.success({
-      message: '删除成功',
-      type: 'success'
-    });
-
-    pageInation();
-  } catch (error) {
-    console.error('Error deleting:', error);
-  }
-};
-
-
-const handleRemove = async (id) => {
-  try {
-    console.log('Scope:', scope);
-
-    if (!scope || !scope.row || !scope.row._id) {
-      console.error('Invalid Product ID');
-      return;
-    }
-
-    const productId = scope.row._id;
-
-    const confirmed = await showDeleteConfirmationDialog();
-
-    if (confirmed) {
-      await remove(productId);
-    }
-  } catch (error) {
-    console.error('Error handling remove:', error);
-  }
-};
-
-
-
-// Funktion som öppnar dialogrutan för bekräftelse av borttagning
-const showDeleteConfirmationDialog = async () => {
-  return new Promise((resolve) => {
-    ElMessageBox.confirm('Bekräfta att radera?', 'Tips', {
-      confirmButtonText: 'Ja',
-      cancelButtonText: 'Nej',
-      type: 'warning',
-      center: true
-    }).then(() => {
-      // Användaren klickade på Ja-knappen
-      resolve(true);
-    }).catch(() => {
-      // Användaren klickade på Nej-knappen
-      resolve(false);
-    });
-  });
-}; */
-
-
 
 const edit = async (id) => {
   if (!id) {
@@ -317,8 +241,6 @@ const edit = async (id) => {
     product.count = res.data.count;
     product.date = res.data.date;
     product.description = res.data.description;
-
-    // Lägg till ytterligare bearbetningslogik här
 
     dialogVisible.value = true;
   } catch (error) {
@@ -367,57 +289,12 @@ const close = async () => {
   dialogVisible.value = false;
 };
 
-/* const onSubmit = () => {
-  if (ruleForm && ruleForm.value) {
-
-    ruleForm.value.validate((valid) => {
-      if (valid) {
-        // 验证通过的逻辑
-        if (search.pid !== '' && search.name === '') {
-          axios.get(`http://localhost:3001/findByPID/${search.pid}`).then((res) => {
-            console.log('根据产品编号搜索');
-            foodList.value = res.data;
-            search.pid = '';
-            page.total = 0;
-          });
-        } else if (search.pid === '' && search.name !== '') {
-          console.log('根据产品名称搜索');
-          axios
-            .get('http://localhost:3001/findByName', {
-              params: {
-                currentPage: page.current,
-                pageSize: page.size,
-                names: search.name,
-              },
-            })
-            .then((res) => {
-              console.log('根据产品名称搜索的结果');
-              console.log(res.data);
-              foodList.value = res.data.data;
-              page.total = res.data.total;
-            });
-        }
-      } else {
-        ElMessage({
-          message: '请提供有效的输入',
-          type: 'error'
-        });
-      }
-    });
-  } else {
-    ElMessage({
-      message: 'Can not find ruleForm',
-      type: 'error'
-    });
-  }
-}; */
-
 const onSubmit = () => {
   if (search.pid !== '' && search.name === '') {
     ruleForm.value.validate((valid) => {
       if (valid) {
         axios.get(`http://localhost:3001/findByPID/${search.pid}`).then((res) => {
-          console.log('根据产品编号搜索');
+          console.log('Sök på produktnummer');
           foodList.value = res.data;
           search.pid = '';
           page.total = 0;
@@ -425,7 +302,7 @@ const onSubmit = () => {
       }
       else {
         ElMessage({
-          message: '请输入3位数字学号',
+          message: 'Vänligen ange rätt nummer',
           type: 'error'
         });
       }
@@ -434,7 +311,7 @@ const onSubmit = () => {
   else if (search.pid === '' && search.name !== '') {
     ruleForm.value.validate((valid) => {
       if (valid) {
-        console.log('根据产品名称搜索');
+        console.log('Sök efter produktnamn');
         axios
           .get(`http://localhost:3001/findByName/${search.name}`, {
             params: {
@@ -444,7 +321,7 @@ const onSubmit = () => {
             },
           })
           .then((res) => {
-            console.log('根据产品名称搜索的结果');
+            console.log('Sökresultat baserat på produktnamn');
             console.log(res.data);
             foodList.value = res.data.data;
             page.total = res.data.total;
@@ -465,14 +342,6 @@ const onSubmit = () => {
     });
   }
 };
-
-
-
-
-
-
-
-
 
 const pageInation = async () => {
   try {
@@ -538,13 +407,6 @@ body {
   line-height: 60px;
   margin-bottom: 1rem;
 }
-
-/* .el-main {
-  background-color: #E9EEF3;
-  color: #333;
-  text-align: center;
-  line-height: 160px;
-} */
 
 .el-form {
   text-align: center;
