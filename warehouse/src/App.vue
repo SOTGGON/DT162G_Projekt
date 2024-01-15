@@ -88,7 +88,7 @@
             </template>
           </el-table-column>
           <el-table-column prop="description" label="Beskrivning" />
-          <el-table-column fixed="right" label="Operations">
+          <el-table-column fixed="right" label="Operationer">
             <template #default="{ row }">
               <el-button type="primary" size="small" @click="edit(row._id)">Redigera</el-button>
               <el-button type="danger" size="small" @click="remove(row._id)">Radera</el-button>

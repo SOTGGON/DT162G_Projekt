@@ -32,6 +32,35 @@ app.get('/find/:id', async (req, res) => {
     }
 });
 
+// Paginerad lista
+app.get('/foodList', async (req, res) => {
+    try {
+        const result = {
+            data: [],
+            total: ''
+        }
+
+        const pageSize = parseInt(req.query.pageSize) || 10;
+        const currentPage = parseInt(req.query.currentPage) || 1;
+
+        const count = await Food.countDocuments({});
+        result.total = count;
+
+        const data = await Food.find({})
+            .skip((currentPage - 1) * pageSize)
+            .limit(pageSize)
+            .lean()
+            .exec();
+
+        result.data = data;
+
+        res.send(result);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 
 // Lägga till maten
 app.post('/add', async (req, res) => {
@@ -107,38 +136,6 @@ app.get('/findByName/:names', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
-
-
-
-// Paginerad lista
-app.get('/foodList', async (req, res) => {
-    try {
-        const result = {
-            data: [],
-            total: ''
-        }
-
-        const pageSize = parseInt(req.query.pageSize) || 10;
-        const currentPage = parseInt(req.query.currentPage) || 1;
-
-        const count = await Food.countDocuments({});
-        result.total = count;
-
-        const data = await Food.find({})
-            .skip((currentPage - 1) * pageSize)
-            .limit(pageSize)
-            .lean()
-            .exec();
-
-        result.data = data;
-
-        res.send(result);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
 
 mongoose.connect('mongodb://localhost:27017/warehouse', {
     useUnifiedTopology: true,
