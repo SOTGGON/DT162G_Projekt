@@ -59,11 +59,11 @@
 
       <el-form ref="ruleForm" :inline="true" :model="search" class="demo-form-inline">
         <el-form-item label="Produktnummer(ID)" prop="['search', 'pid']">
-          <el-input v-model="search.pid" placeholder="Exakt sökning" clearable  :rules="rules.pid"/>
+          <el-input v-model="search.pid" placeholder="Exakt sökning" clearable :rules="rules.pid" />
         </el-form-item>
 
         <el-form-item label="Produktnamn" prop="['search', 'name']">
-          <el-input v-model="search.name" placeholder="Luddig sökning" clearable  :rules="rules.name"/>
+          <el-input v-model="search.name" placeholder="Luddig sökning" clearable :rules="rules.name" />
         </el-form-item>
 
         <el-form-item>
@@ -82,7 +82,11 @@
           <el-table-column prop="name" label="Produkt Namn" />
           <el-table-column prop="type" label="Produkttyper" />
           <el-table-column prop="count" label="Antal produkt" />
-          <el-table-column prop="date" label="Hållbarhetstid" />
+          <el-table-column prop="date" label="Hållbarhetstid" :class-name="cellClassName">
+            <template v-slot="{ row }">
+              <span :style="cellClassName(row)">{{ formatDate(row.date) }}</span>
+            </template>
+          </el-table-column>
           <el-table-column prop="description" label="Beskrivning" />
           <el-table-column fixed="right" label="Operations">
             <template #default="{ row }">
@@ -107,6 +111,7 @@ import { reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import axios from 'axios';
 import { onMounted } from 'vue';
+import dayjs from 'dayjs';
 
 const ruleForm = ref({});
 const dialogTitle = ref('');
@@ -191,6 +196,8 @@ const add = async (pageInation) => {
       ElMessage.error('Vänligen fyll i produkt-ID, produktnamn och produkttyp');
       return;
     }
+
+    product.date = dayjs(product.date).format('YYYY-MM-DD');
 
     delete product._id;
 
@@ -290,6 +297,7 @@ const addAndUpdate = async () => {
   if (dialogTitle.value == "Lägga till produkt information") {
     add(pageInation);
   } else {
+    product.date = dayjs(product.date).format('YYYY-MM-DD');
     confirmUpdate(product._id, pageInation);
   }
 };
@@ -402,6 +410,24 @@ const currentChange = (currentPage) => {
   pageInation();
 };
 
+
+const cellClassName = (row) => {
+  const cellDate = new Date(row.date);
+
+  // Ensure row.date is a valid date string
+  if (isNaN(cellDate.getTime())) {
+    return {};
+  }
+
+  const currentDate = new Date();
+  const dateDifference = Math.ceil((cellDate - currentDate) / (1000 * 60 * 60 * 24));
+
+  return dateDifference === 2 ? { color: 'red' } : {};
+};
+
+const formatDate = (date) => {
+  return dayjs(date).format('YYYY-MM-DD');
+};
 </script>
 
 <style scoped>
@@ -436,5 +462,9 @@ body {
 
 .el-date-picker {
   width: auto;
+}
+
+.red-text {
+  color: red;
 }
 </style>
